@@ -1,0 +1,22 @@
+{
+  "name": "movietime",
+  "version": "1.0.0",
+  "description": "movietime app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamlockon/movietime.git"
+  },
+  "author": "iamlockon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iamlockon/movietime/issues"
+  },
+  "homepage": "https://github.com/iamlockon/movietime#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}

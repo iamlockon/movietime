@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Place Searches</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 50%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=places&language=zh-TW&callback=initMap" async defer></script>
+    <script src="/movietime/module.js"></script>
+  </head>
+  <body>
+    <div>
+      <a href="javascript:void(0);" onclick="getTheaterLocation(event)" id="ml"><img src="http://www.photowant.com/photo101/fpen42368254/pl_fpen42368254_0002.jpg" alt="私人戰爭"></a>
+    </div>
+    <div id="map"></div>
+    <script type="text/javascript">
+
+    </script>
+
+    
+  </body>
+</html>
