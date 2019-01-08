@@ -8,6 +8,7 @@ var infowindow;
 let service;
 let pyrmont;
 let city;
+
 function initMap() {
   gmap = google.maps;
   //console.log("pre map creation");
@@ -102,7 +103,13 @@ function getTheaterLocation(e) {
     //process
     console.log("myJson before filter", myJson);
     myJson = myJson.filter((ele)=>{
-      return ele.times !== undefined && ele.times.length !== 0;
+      if(ele.times === undefined)return false;
+      for(let i = 0; i< ele.times.length;i++){
+        //if(ele.times[i] === undefined)return false;
+        if(ele.times[i].length === 0)return false;
+        if(ele.times[i].length > 0)return true;
+      }
+      return false;
     });
     console.log("myJson=",myJson);
     let count = 1;
@@ -155,11 +162,18 @@ function getCity(place, citycallback){
   })
 }
 
-function callback(results, status){
-  if (status === google.maps.places.PlacesServiceStatus.OK) {
-    //console.log(results);
-    for (var i = 0; i < results.length; i++) {
-      createMarker(results[i], placedata);
-    }
-  }
+
+function loadPoster(callback){
+  const url = 'http://localhost:3000/loadPoster'
+  fetch(url)
+  .then((response)=>{
+    return response.json();
+  })
+  .then((myJson)=>{
+    //console.log(myJson);
+    callback(myJson);
+  })
+  .catch((err)=>{
+    console.log(err);
+  });
 }

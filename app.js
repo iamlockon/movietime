@@ -3,7 +3,7 @@ const app = express();
 const port = 3000;
 const path = require('path');
 const mt =  require('./movietime.js');
-
+const fs = require('fs');
 app.get('/', (req, res)=>{
 	res.sendFile(path.join(__dirname+'/index.html'));
 });
@@ -23,5 +23,11 @@ app.get('/nearestshowtime', (req, res)=> {
 	});
 
 });
+
+app.get('/loadPoster', (req, res)=>{
+	mt.loadPoster((result)=>{
+		res.send(result);
+	});
+})
 
 app.listen(port , ()=> console.log(`App listening on port ${port} `));

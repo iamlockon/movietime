@@ -14,6 +14,26 @@ const cheerio = require('cheerio');
 
 module.exports = {
 
+	loadPoster : function loadPoster(callback){
+  		request('http://ww2.atmovies.com.tw/james-parallelism/newfilm.html', (err, res, body)=>{
+  			if(err){
+  				console.log(err);
+  			}
+  			let $ = cheerio.load(body);
+  			//console.log("pre map, result= ", $('.item.thumb img'));
+  			let result = $('.item.thumb img').map((index, obj)=>{
+  				console.log("obj",$(obj));
+  				return {
+  					src:$(obj).attr('src'),
+  					alt:$(obj).attr('alt')
+  				}
+  			}).get();
+  			//console.log($('.inner img'));
+  			console.log(result);
+  			callback(result);
+  		})
+	},
+
 	getClosestMovieTime : async function getClosestMovieTime(movie, area, callback){
 		let ID, areaID;
 		try{
