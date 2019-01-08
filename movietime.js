@@ -24,32 +24,54 @@ module.exports = {
 		}
 		//let now = new Date(2019,1,1,10,10);
 		let now = new Date();
-		console.log(now);
+		//console.log(now);
 		request('http://www.atmovies.com.tw/showtime/'+ID+'/'+areaID+'/', (err, res, body) => {
 			if(err)
 				console.log(err);
 			let $ = cheerio.load(body);
+			let repeated = [];
 			let result = $('#filmShowtimeBlock ul').map((index,obj)=>{
+				let cur = $('#filmShowtimeBlock ul')[index];
+				let next = $('#filmShowtimeBlock ul')[index+1];
+				console.log("A:",$(cur).find('.theaterTitle a').text()," B:",$(next).find('.theaterTitle a').text());
+				if($(cur).find('.theaterTitle a').text() == $(next).find('.theaterTitle a').text()){
+					repeated.push(index+1);
+				}
 				return {
 					theater:$(obj).find('.theaterTitle a').text(),
-					type:$(obj).find('.filmVersion').text(),
-					times:$(obj).find('li').filter((i, ele)=>{
+					type:[$(obj).find('.filmVersion').text()],
+					times:[$(obj).find('li').filter((i, ele)=>{
 						if($(ele).text().includes('：')){
 							let hhmm = $(ele).text().split('：');
 							//console.log(hhmm[0]);
 
 							// Beware of arithmetic expressions. hhmm[1]*1 but not hhmm[1] only.
 							// Limit the time range to +180 minutes.
-							if(hhmm[0]*60 + hhmm[1]*1 > now.getHours()*60 + now.getMinutes()*1 || hhmm[0]*60 + hhmm[1]*1 < now.getHours()*60 + now.getMinutes()*1 + 180){
+							if(hhmm[0] < 3)
+								hhmm[0] = hhmm[0]*1 + 24; 
+							const showtime = hhmm[0]*60 + hhmm[1]*1;
+							const nowtime = now.getHours()*60 + now.getMinutes();
+							if(showtime > nowtime && nowtime + 180 > showtime){
 								return ele;
 							}
 						}
 					}).map((index,obj)=>{
 						return $(obj).text();
-					}).get()
+					}).get()],
+
 	    		}
-			}).get();
-			//console.log(result);
+				}).get();
+			//merge identical theater results.
+			console.log("repeated:",repeated);
+			let head = repeated[0]-1;
+			for(let i = 0; i < repeated.length; i++){
+				result[head].type = result[head].type.concat(result[repeated[i]].type);
+				result[head].times = result[head].times.concat(result[repeated[i]].times);
+				result[repeated[i]] = {};
+				head = (repeated[i]+1 === repeated[i+1]) ? head : repeated[i+1]-1;
+			}
+
+			//console.log(result)
 			callback(result);
 		})
 		//});
