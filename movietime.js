@@ -30,7 +30,7 @@ module.exports = {
   				}
   			}).get();
   			//console.log($('.inner img'));
-  			console.log(result);
+  			//console.log(result);
   			callback(result);
   		})
 	},
@@ -54,7 +54,7 @@ module.exports = {
 			let result = $('#filmShowtimeBlock ul').map((index,obj)=>{
 				let cur = $('#filmShowtimeBlock ul')[index];
 				let next = $('#filmShowtimeBlock ul')[index+1];
-				console.log("A:",$(cur).find('.theaterTitle a').text()," B:",$(next).find('.theaterTitle a').text());
+				//console.log("A:",$(cur).find('.theaterTitle a').text()," B:",$(next).find('.theaterTitle a').text());
 				if($(cur).find('.theaterTitle a').text() == $(next).find('.theaterTitle a').text()){
 					repeated.push(index+1);
 				}
@@ -83,7 +83,7 @@ module.exports = {
 	    		}
 				}).get();
 			//merge identical theater results.
-			console.log("repeated:",repeated);
+			//console.log("repeated:",repeated);
 			let head = repeated[0]-1;
 			for(let i = 0; i < repeated.length; i++){
 				result[head].type = result[head].type.concat(result[repeated[i]].type);

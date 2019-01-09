@@ -2,13 +2,15 @@
 // This example requires the Places library. Include the libraries=places
 // parameter when you first load the API. For example:
 // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
-const SERVERIP = '192.168.1.64';
+const SERVERIP = '127.0.0.1';
 let gmap;
 var map;
 var infowindow;
 let service;
 let pyrmont;
 let city;
+
+let markers = [];
 
 function initMap() {
   gmap = google.maps;
@@ -63,6 +65,7 @@ function createMarker(place, placedata) {
     map: map,
     position: place.geometry.location
   });
+  markers.push(marker);
   let str ="<h3>"+place.name+"</h1>";
   for(let i = 0; i < placedata.type.length; i++){
     if(placedata.times[i].length !== 0)
@@ -77,7 +80,15 @@ function createMarker(place, placedata) {
   });
 }
 
+function removeMarker(){
+  for(const ma of markers){
+    ma.setMap(null);
+  }
+  markers.length = 0;
+}
+
 function getTheaterLocation(e) {
+  removeMarker();
   //console.log("e=",e);
   //retrieve the showtime from backend.
   let service = new google.maps.places.PlacesService(map);
@@ -87,7 +98,7 @@ function getTheaterLocation(e) {
   //   keyword: '電影院'
   // }, callback);
   //console.log(city);
-  const url = 'https://'+SERVERIP+':3000/nearestshowtime?area='+city+'&movie='+e.target.getAttribute('alt');
+  const url = 'http://'+SERVERIP+':3000/nearestshowtime?area='+city+'&movie='+e.target.getAttribute('alt');
   fetch(url,{
     method: 'GET',
     headers: {
@@ -102,7 +113,7 @@ function getTheaterLocation(e) {
     //Json data here.
     
     //process
-    console.log("myJson before filter", myJson);
+    //console.log("myJson before filter", myJson);
     myJson = myJson.filter((ele)=>{
       if(ele.times === undefined)return false;
       for(let i = 0; i< ele.times.length;i++){
@@ -112,15 +123,15 @@ function getTheaterLocation(e) {
       }
       return false;
     });
-    console.log("myJson=",myJson);
+    //console.log("myJson=",myJson);
     let count = 1;
     for (let placedata of myJson){
       if(count % 6 === 0){
         await sleep(3000);
       }
       count++;
-      console.log(placedata);
-      console.log("begin search, count=", count);
+      //console.log(placedata);
+      //console.log("begin search, count=", count);
       service.textSearch({
       location: pyrmont,
       query: placedata.theater,
@@ -133,7 +144,7 @@ function getTheaterLocation(e) {
         }
       }
       else{
-        console.log("textSearch Failed on: ",placedata, "status:",status);
+        //console.log("textSearch Failed on: ",placedata, "status:",status);
       }
     });
     }
@@ -165,7 +176,7 @@ function getCity(place, citycallback){
 
 
 function loadPoster(callback){
-  const url = 'https://'+SERVERIP+':3000/loadPoster'
+  const url = 'http://'+SERVERIP+':3000/loadPoster'
   fetch(url)
   .then((response)=>{
     return response.json();
