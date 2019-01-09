@@ -22,7 +22,8 @@ module.exports = {
   			let $ = cheerio.load(body);
   			//console.log("pre map, result= ", $('.item.thumb img'));
   			let result = $('.item.thumb img').map((index, obj)=>{
-  				console.log("obj",$(obj));
+  				//console.log("obj",$(obj));
+  				if($(obj).attr('alt') === "開眼E週報")return undefined;
   				return {
   					src:$(obj).attr('src'),
   					alt:$(obj).attr('alt')

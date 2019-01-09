@@ -4,11 +4,13 @@ const port = 3000;
 const path = require('path');
 const mt =  require('./movietime.js');
 const fs = require('fs');
+const https = require('https');
 app.get('/', (req, res)=>{
+	console.log("connected");
 	res.sendFile(path.join(__dirname+'/index.html'));
 });
 
-app.get('/movietime/module.js', (req, res)=>{
+app.get('/movietime/module', (req, res)=>{
 	res.sendFile(path.join(__dirname+'/module.js'));
 });
 
@@ -30,4 +32,10 @@ app.get('/loadPoster', (req, res)=>{
 	});
 })
 
-app.listen(port , ()=> console.log(`App listening on port ${port} `));
+https.createServer({
+	key:fs.readFileSync('server.key'),
+	cert:fs.readFileSync('server.cert')
+}, app)
+.listen(3000, ()=>{
+	console.log("listening on port 3000.");
+});

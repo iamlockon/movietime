@@ -2,6 +2,7 @@
 // This example requires the Places library. Include the libraries=places
 // parameter when you first load the API. For example:
 // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+const SERVERIP = '192.168.1.64';
 let gmap;
 var map;
 var infowindow;
@@ -36,11 +37,11 @@ function initMap() {
       infowindow = new google.maps.InfoWindow();
       
     }, function() {
-      handleLocationError(true, infoWindow, map.getCenter());
+      handleLocationError(true, infowindow, map.getCenter());
     });
   } else {
     // Browser doesn't support Geolocation
-    handleLocationError(false, infoWindow, map.getCenter());
+    handleLocationError(false, infowindow, map.getCenter());
   }
   
 }
@@ -62,7 +63,7 @@ function createMarker(place, placedata) {
     map: map,
     position: place.geometry.location
   });
-  let str ="<h1>"+place.name+"</h1>";
+  let str ="<h3>"+place.name+"</h1>";
   for(let i = 0; i < placedata.type.length; i++){
     if(placedata.times[i].length !== 0)
       str += "<h4>" +placedata.type[i]+"</h4>"+"<div>放映時間：</div>";
@@ -86,7 +87,7 @@ function getTheaterLocation(e) {
   //   keyword: '電影院'
   // }, callback);
   //console.log(city);
-  const url = 'http://localhost:3000/nearestshowtime?area='+city+'&movie='+e.target.getAttribute('alt');
+  const url = 'https://'+SERVERIP+':3000/nearestshowtime?area='+city+'&movie='+e.target.getAttribute('alt');
   fetch(url,{
     method: 'GET',
     headers: {
@@ -164,7 +165,7 @@ function getCity(place, citycallback){
 
 
 function loadPoster(callback){
-  const url = 'http://localhost:3000/loadPoster'
+  const url = 'https://'+SERVERIP+':3000/loadPoster'
   fetch(url)
   .then((response)=>{
     return response.json();

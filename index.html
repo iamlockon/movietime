@@ -16,12 +16,21 @@
         margin: 0;
         padding: 0;
       }
+      .scrolling-wrapper-flexbox {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+      }
+      .card {
+        flex: 0 0 auto;
+      }
     </style>
+    <script src="/movietime/module"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=places&language=zh-TW&callback=initMap" async defer></script>
-    <script src="/movietime/module.js"></script>
+    
   </head>
   <body>
-    <div id="poster">
+    <div id="poster" class="scrolling-wrapper-flexbox">
 
       <!---
       <a href="javascript:void(0);" onclick="getTheaterLocation(event)" ><img src="http://www.photowant.com/photo101/fpen42368254/pl_fpen42368254_0002.jpg" alt="私人戰爭"></a>
@@ -37,13 +46,16 @@
           let newImg = document.createElement("img");
           newA.setAttribute('href', "javascript:void(0)");
           newA.setAttribute('onclick',"getTheaterLocation(event)");
+          newA.className = newA.className.concat("card ");
           newImg.setAttribute('src',img.src);
           newImg.setAttribute('alt',img.alt);
           newA.appendChild(newImg);
           poster.appendChild(newA);
 
+
         }
       });
+
 
     </script>
 
