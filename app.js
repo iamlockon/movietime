@@ -10,7 +10,7 @@ app.get('/', (req, res)=>{
 	res.sendFile(path.join(__dirname+'/index.html'));
 });
 
-app.get('/movietime/module', (req, res)=>{
+app.get('/module', (req, res)=>{
 	res.sendFile(path.join(__dirname+'/module.js'));
 });
 
