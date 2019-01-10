@@ -2,7 +2,6 @@
 // This example requires the Places library. Include the libraries=places
 // parameter when you first load the API. For example:
 // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
-const SERVERIP = '127.0.0.1';
 let gmap;
 var map;
 var infowindow;
@@ -98,7 +97,7 @@ function getTheaterLocation(e) {
   //   keyword: '電影院'
   // }, callback);
   //console.log(city);
-  const url = 'http://'+SERVERIP+':3000/nearestshowtime?area='+city+'&movie='+e.target.getAttribute('alt');
+  const url = '/nearestshowtime?area='+"南投"+'&movie='+e.target.getAttribute('alt');
   fetch(url,{
     method: 'GET',
     headers: {
@@ -111,7 +110,11 @@ function getTheaterLocation(e) {
   })
   .then(async function(myJson){
     //Json data here.
-    
+    if(myJson.length === 0){
+      //no showtime
+      alert("很抱歉，您所在地點附近無場次資料。");
+    }
+
     //process
     //console.log("myJson before filter", myJson);
     myJson = myJson.filter((ele)=>{
@@ -125,7 +128,7 @@ function getTheaterLocation(e) {
     });
     //console.log("myJson=",myJson);
     let count = 1;
-    for (let placedata of myJson){
+    for (let placedata of myJson){ 
       if(count % 6 === 0){
         await sleep(3000);
       }
@@ -150,7 +153,7 @@ function getTheaterLocation(e) {
     }
   })
   .catch((err)=>{
-    //console.log(err);
+    console.log(err);
   })
 }
 
@@ -176,7 +179,7 @@ function getCity(place, citycallback){
 
 
 function loadPoster(callback){
-  const url = 'http://'+SERVERIP+':3000/loadPoster'
+  const url = '/loadPoster'
   fetch(url)
   .then((response)=>{
     return response.json();
