@@ -4,10 +4,14 @@ const port = 3000;
 const path = require('path');
 const mt =  require('./movietime.js');
 const fs = require('fs');
-const https = require('https');
+
+app.set('views', '.');
+app.set('view engine', 'ejs');
+app.use('/static', express.static('images'));
+
 app.get('/', (req, res)=>{
-	//console.log("connected");
-	res.sendFile(path.join(__dirname+'/index.html'));
+	let files = fs.readdirSync('images');
+	res.render('index',{files:files});
 });
 
 app.get('/module', (req, res)=>{
@@ -25,19 +29,5 @@ app.get('/nearestshowtime', (req, res)=> {
 	});
 
 });
-
-app.get('/loadPoster', (req, res)=>{
-	mt.loadPoster((result)=>{
-		res.send(result);
-	});
-})
-
-// https.createServer({
-// 	key:fs.readFileSync('server.key'),
-// 	cert:fs.readFileSync('server.cert')
-// }, app)
-// .listen(3000, ()=>{
-// 	console.log("listening on port 3000.");
-// });
 
 app.listen(port, ()=>console.log("listening on port 3000"));

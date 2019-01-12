@@ -4,7 +4,7 @@ Inspired by https://ithelp.ithome.com.tw/articles/10192478
 
 const request = require('request');
 const cheerio = require('cheerio');
-
+const fs = require('fs');
 //Graphic UI?
 
 // getClosestMovieTime(process.argv[2], process.argv[3],(result)=>{
@@ -14,39 +14,18 @@ const cheerio = require('cheerio');
 
 module.exports = {
 
-	loadPoster : function loadPoster(callback){
-  		request('http://ww2.atmovies.com.tw/james-parallelism/newfilm.html', (err, res, body)=>{
-  			if(err){
-  				console.log(err);
-  			}
-  			let $ = cheerio.load(body);
-  			//console.log("pre map, result= ", $('.item.thumb img'));
-  			let result = $('.item.thumb img').map((index, obj)=>{
-  				//console.log("obj",$(obj));
-  				if($(obj).attr('alt') === "開眼E週報")return undefined;
-  				return {
-  					src:$(obj).attr('src'),
-  					alt:$(obj).attr('alt')
-  				}
-  			}).get();
-  			//console.log($('.inner img'));
-  			//console.log(result);
-  			callback(result);
-  		})
-	},
 
 	getClosestMovieTime : async function getClosestMovieTime(movie, area, callback){
-		let ID, areaID;
-		try{
-			ID = await getMovieID(movie);
-			areaID = await getAreaID(area);
-		}catch(err){
-			console.log(err);
-		}
+		/*
+		movie:filmID
+		area: "XX" in zh-TW
+		*/
+		let areaID;
+		areaID = getAreaID(area);
 		//let now = new Date(2019,1,1,10,10);
 		let now = new Date();
 		//console.log(now);
-		request('http://www.atmovies.com.tw/showtime/'+ID+'/'+areaID+'/', (err, res, body) => {
+		request('http://www.atmovies.com.tw/showtime/'+movie+'/'+areaID+'/', (err, res, body) => {
 			if(err)
 				console.log(err);
 			let $ = cheerio.load(body);
@@ -103,34 +82,17 @@ module.exports = {
 	}
 };
 
-function getMovieID(movie){
-	return new Promise((resolve, reject)=>{
-		request('http://www.atmovies.com.tw/movie', (err, res, body) => {
-			if(err)
-				reject(err);
-			let $ = cheerio.load(body);
-			let re = new RegExp(movie, "i");
-			
-	    	let result =  $('select[name=film_id] option').filter((index, obj) => {
-	      		return re.test($(obj).text())
-	    	}).val();
-	    	//console.log("getMovieID : ",result);
-	    	resolve(result);
-	    })
-	});
-}
 function getAreaID(area){
-	return new Promise((resolve, reject)=>{
-		request('http://www.atmovies.com.tw/movie', (err, res, body) => {
-			if(err)
-				reject(err);
-			let $ = cheerio.load(body);
-			let re = new RegExp(area, "i");
-	    	let result =  $('select[name=area] option').filter((index, obj) => {
-	      		return re.test($(obj).text())
-	    	}).val();
-	    	//console.log("getAreaID : ", result);
-	    	resolve(result);
-	    });
-	})
+	/*
+	load file "theaterArea.json" and get theaterID.
+	*/
+	let rawdata;
+	try{
+		rawdata = fs.readFileSync('theaterArea.json');
+	}catch(err){
+		console.log("Get raw data from theaterArea.json failed.... :", err);
+	}
+	//transform the raw data to object.
+	let data = JSON.parse(rawdata);
+	return data[area];
 }

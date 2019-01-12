@@ -17,6 +17,11 @@
   },
   "homepage": "https://github.com/iamlockon/movietime#readme",
   "dependencies": {
-    "express": "^4.16.4"
+    "@google/maps": "^0.5.5",
+    "axios": "^0.18.0",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "html": "^1.0.0",
+    "pug": "^2.0.3"
   }
 }
