@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Place Searches</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      #map {
+        height: 20%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .scrolling-wrapper-flexbox {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        height:80%;
+      }
+      .card {
+        flex: 0 0 auto;
+      }
+    </style>
+    <script src="/module"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=places&language=zh-TW&callback=initMap" async defer></script>
+    
+  </head>
+  <body>
+    <div id="poster" class="scrolling-wrapper-flexbox">
+      <% for(const img of files ){ %>
+        <a class="card " href="javascript:void(0)" onclick="getTheaterLocation(event)"> <img  alt="<%= img.split('.')[0] %>" src="static/<%= img %>"></img>
+        </a>
+      <%}%>
+    </div>
+    <div id="map"></div>
+    <script type="text/javascript">
+      
+    </script>
+  </body>
+</html>

@@ -58,46 +58,16 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 
 
 
-function createMarker(place, placedata) {
-  var placeLoc = place.geometry.location;
-  var marker = new google.maps.Marker({
-    map: map,
-    position: place.geometry.location
-  });
-  markers.push(marker);
-  let str ="<h3>"+place.name+"</h1>";
-  for(let i = 0; i < placedata.type.length; i++){
-    if(placedata.times[i].length !== 0)
-      str += "<h4>" +placedata.type[i]+"</h4>"+"<div>放映時間：</div>";
-    for(const time of placedata.times[i]){
-      str += "<h4>"+ time + "</h4>";
-    }
-  }
-  google.maps.event.addListener(marker, 'click', function() {
-    infowindow.setContent(str);
-    infowindow.open(map, this);
-  });
-}
-
-function removeMarker(){
-  for(const ma of markers){
-    ma.setMap(null);
-  }
-  markers.length = 0;
-}
-
 function getTheaterLocation(e) {
   removeMarker();
   //console.log("e=",e);
   //retrieve the showtime from backend.
   let service = new google.maps.places.PlacesService(map);
-  // service.nearbySearch({
-  //   location: pyrmont,
-  //   radius: '7000',
-  //   keyword: '電影院'
-  // }, callback);
-  //console.log(city);
-  const url = '/nearestshowtime?area='+"南投"+'&movie='+e.target.getAttribute('alt');
+  /*
+  city: "XX" in zh-TW 
+  movie: filmID
+  */
+  const url = '/nearestshowtime?area='+city+'&movie='+e.target.getAttribute('alt');
   fetch(url,{
     method: 'GET',
     headers: {
@@ -178,17 +148,30 @@ function getCity(place, citycallback){
 }
 
 
-function loadPoster(callback){
-  const url = '/loadPoster'
-  fetch(url)
-  .then((response)=>{
-    return response.json();
-  })
-  .then((myJson)=>{
-    //console.log(myJson);
-    callback(myJson);
-  })
-  .catch((err)=>{
-    console.log(err);
+function createMarker(place, placedata) {
+  var placeLoc = place.geometry.location;
+  var marker = new google.maps.Marker({
+    map: map,
+    position: place.geometry.location
   });
+  markers.push(marker);
+  let str ="<h3>"+place.name+"</h1>";
+  for(let i = 0; i < placedata.type.length; i++){
+    if(placedata.times[i].length !== 0)
+      str += "<h4>" +placedata.type[i]+"</h4>"+"<div>放映時間：</div>";
+    for(const time of placedata.times[i]){
+      str += "<h4>"+ time + "</h4>";
+    }
+  }
+  google.maps.event.addListener(marker, 'click', function() {
+    infowindow.setContent(str);
+    infowindow.open(map, this);
+  });
+}
+
+function removeMarker(){
+  for(const ma of markers){
+    ma.setMap(null);
+  }
+  markers.length = 0;
 }
