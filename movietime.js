@@ -24,6 +24,7 @@ module.exports = {
 		areaID = getAreaID(area);
 		//let now = new Date(2019,1,1,10,10);
 		let now = new Date();
+		now.setHours(now.getHours()+8);
 		//console.log(now);
 		request('http://www.atmovies.com.tw/showtime/'+movie+'/'+areaID+'/', (err, res, body) => {
 			if(err)

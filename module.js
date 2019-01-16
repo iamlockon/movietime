@@ -2,8 +2,30 @@
 // This example requires the Places library. Include the libraries=places
 // parameter when you first load the API. For example:
 // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
-let gmap;
-var map;
+//const axios = require('axios');
+
+const areas ={
+  "基隆": "a01",
+  "台北": "a02",
+  "桃園": "a03",
+  "新竹": "a35",
+  "苗栗": "a37",
+  "台中": "a04",
+  "彰化": "a47",
+  "雲林": "a45",
+  "南投": "a49",
+  "嘉義": "a05",
+  "台南": "a06",
+  "高雄": "a07",
+  "宜蘭": "a39",
+  "花蓮": "a38",
+  "台東": "a89",
+  "屏東": "a87",
+  "澎湖": "a69",
+  "金門": "a68"
+}
+
+let map;
 var infowindow;
 let service;
 let pyrmont;
@@ -11,58 +33,60 @@ let city;
 
 let markers = [];
 
+
+
 function initMap() {
-  gmap = google.maps;
-  //console.log("pre map creation");
-  map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 15
-  });
+  const options = {
+    timeout: 5000,
+    maximumAge: 3600*1000
+  };
+  
   const image = {
     url: 'https://material.io/tools/icons/static/ic_icons_192px_light.svg',
     scaledSize: new google.maps.Size(25, 25)
+  };
+  if(!navigator.geolocation){
+    alert("此瀏覽器不支援HTML5 Geolocation。");
+    throw new Error("HTML5 Geolocation API not supported...");
   }
-  if (navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(function(position){
-      pyrmont = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
-      getCity(pyrmont, (res)=>{
-        city = res;
-      });
-      //console.log("lat:",position.coords.latitude, "lng:", position.coords.longitude);
-      //console.log("pyrmont:",pyrmont);
-      map.setCenter(pyrmont);
-      const marker = new google.maps.Marker({
-      map: map,
-      position: pyrmont,
-      icon: image,
-      });
-      infowindow = new google.maps.InfoWindow();
-      
-    }, function() {
-      handleLocationError(true, infowindow, map.getCenter());
+  navigator.geolocation.getCurrentPosition(success, error, options);
+  function success(position) {
+    pyrmont = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+    getCity(pyrmont, (res)=>{
+      city = res;
     });
-  } else {
-    // Browser doesn't support Geolocation
-    handleLocationError(false, infowindow, map.getCenter());
-  }
-  
+    console.log("lat:",position.coords.latitude, "lng:", position.coords.longitude);
+    //console.log("pyrmont:",pyrmont);
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 12
+    });
+    map.setCenter(pyrmont);
+    const marker = new google.maps.Marker({
+    map: map,
+    position: pyrmont,
+    icon: image,
+    });
+    infowindow = new google.maps.InfoWindow();
+  };
+
+  function error(err) {
+    console.warn('ERROR(' + err.code + '): ' + err.message);
+    if(err.code === 1)
+      alert("取得位置失敗，請開啟定位或GPS，並使用高精確度模式。");
+    else if(err.code === 2)
+      alert("取得位置失敗，裝置回傳之位置資訊錯誤，請稍後再試。");
+    else
+      alert("取得位置逾時，請稍後再試。");
+  };
+
+
 }
-
-
-function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-  infoWindow.setPosition(pos);
-  infoWindow.setContent(browserHasGeolocation ?
-                        'Error: The Geolocation service failed.' :
-                        'Error: Your browser doesn\'t support geolocation.');
-  infoWindow.open(map);
-}
-
-
 
 function getTheaterLocation(e) {
   removeMarker();
+  TweenLite.to(window, 0.7,{scrollTo:"#map"}); 
   //console.log("e=",e);
   //retrieve the showtime from backend.
-  let service = new google.maps.places.PlacesService(map);
   /*
   city: "XX" in zh-TW 
   movie: filmID
@@ -82,7 +106,7 @@ function getTheaterLocation(e) {
     //Json data here.
     if(myJson.length === 0){
       //no showtime
-      alert("很抱歉，您所在地點附近無場次資料。");
+      alert("很抱歉，您所在縣市電影院3小時內無相關場次資料。");
     }
 
     //process
@@ -96,40 +120,31 @@ function getTheaterLocation(e) {
       }
       return false;
     });
-    //console.log("myJson=",myJson);
-    let count = 1;
-    for (let placedata of myJson){ 
-      if(count % 6 === 0){
-        await sleep(3000);
-      }
-      count++;
-      //console.log(placedata);
-      //console.log("begin search, count=", count);
-      service.textSearch({
-      location: pyrmont,
-      query: placedata.theater,
-      radius: '7000'
-      },(results, status)=>{
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        //console.log(results);
-        for (var i = 0; i < results.length; i++) {
-          createMarker(results[i], placedata);
+
+
+    //get LatLng of theaters with axios
+    // request url like: /theaterinfo/a02 
+    //console.log("module.js line 126, city=",city," areas.city=",areas[city]);
+    axios.get(`/theaterinfo?area=${areas[city]}`)
+      .then((theaterdata)=>{
+        //console.log("theaterdata= ", theaterdata);
+        for (const showtimedata of myJson){ 
+          //showtimedata : {theater: "XX", type:Array, times:Array}, get LatLng from the file
+          createMarker(theaterdata.data[showtimedata.theater], showtimedata);
         }
-      }
-      else{
-        //console.log("textSearch Failed on: ",placedata, "status:",status);
-      }
-    });
-    }
+      })
+      .catch((err)=>console.log("Get theaterinfo failed... :",err));
+    
+    
   })
   .catch((err)=>{
     console.log(err);
   })
 }
 
-function sleep(milli) {
-  return new Promise(resolve => setTimeout(resolve, milli));
-}
+// function sleep(milli) {
+//   return new Promise(resolve => setTimeout(resolve, milli));
+// }
 
 function getCity(place, citycallback){
   let geocoder = new google.maps.Geocoder();
@@ -148,18 +163,21 @@ function getCity(place, citycallback){
 }
 
 
-function createMarker(place, placedata) {
-  var placeLoc = place.geometry.location;
-  var marker = new google.maps.Marker({
+function createMarker(location, showtimedata) {
+  
+  const latLng = location[1];
+  const addr = location[0];
+
+  let marker = new google.maps.Marker({
     map: map,
-    position: place.geometry.location
+    position: latLng
   });
   markers.push(marker);
-  let str ="<h3>"+place.name+"</h1>";
-  for(let i = 0; i < placedata.type.length; i++){
-    if(placedata.times[i].length !== 0)
-      str += "<h4>" +placedata.type[i]+"</h4>"+"<div>放映時間：</div>";
-    for(const time of placedata.times[i]){
+  let str =`<h3><a href="https://www.google.com/maps/search/?api=1&query=${showtimedata.theater}">`+showtimedata.theater+"</a></h1>";
+  for(let i = 0; i < showtimedata.type.length; i++){
+    if(showtimedata.times[i].length !== 0)
+      str += "<h4>" +showtimedata.type[i]+"</h4>"+"<div>放映時間：</div>";
+    for(const time of showtimedata.times[i]){
       str += "<h4>"+ time + "</h4>";
     }
   }
