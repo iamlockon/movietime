@@ -1,17 +1,22 @@
+require('@google-cloud/debug-agent').start();
 const express = require('express');
 const app = express();
 const port = 3000;
 const path = require('path');
 const mt =  require('./movietime.js');
+const gp = require('./getPoster.js');
 const fs = require('fs');
 const {exec} = require('child_process');
 
+const {Storage} = require('@google-cloud/storage');
+const storage = new Storage();
+const bucketName = 'movie-1546758871417.appspot.com';
+
 app.set('views', '.');
 app.set('view engine', 'ejs');
-app.use('/static', express.static('images'));
 
-app.get('/', (req, res)=>{
-	let files = fs.readdirSync('images');
+app.get('/', async (req, res)=>{
+	const [files] = await storage.bucket(bucketName).getFiles();
 	res.render('index',{files:files});
 });
 
@@ -20,15 +25,10 @@ app.get('/module', (req, res)=>{
 });
 
 app.get('/getPoster',(req, res)=>{
-	exec('node getPoster.js', (error, stdout, stderr)=>{
-		if(error){
-			console.error(`exec error: ${error}`);
-			return;
-		}
-		console.log(`stdout:${stdout}`);
-		console.log(`stderr:${stderr}`);
-	});
-	res.send('Hello');
+	if(req.get('X-Appengine-Cron')){
+		gp.getFilm();
+		res.send('hello');
+	}
 })
 app.get('/theaterinfo', (req,res)=>{
 	//req.query : area  

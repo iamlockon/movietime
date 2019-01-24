@@ -18,11 +18,32 @@
   },
   "homepage": "https://github.com/iamlockon/movietime#readme",
   "dependencies": {
+    "@google-cloud/debug-agent": "^3.0.1",
+    "@google-cloud/storage": "^2.3.4",
     "@google/maps": "^0.5.5",
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
+    "mongodb": "^3.1.13",
     "request": "^2.88.0"
+  },
+  "cloud-repo-tools": {
+    "requiresProjectId": true,
+    "requiresKeyFile": true,
+    "test": {
+      "app": {
+        "requiredEnvVars": [
+          "GCLOUD_STORAGE_BUCKET"
+        ],
+        "msg": "<input type=\"file\" name=\"file\">",
+        "substitutions": "YOUR_BUCKET_NAME=$GCLOUD_STORAGE_BUCKET"
+      },
+      "build": {
+        "requiredEnvVars": [
+          "GCLOUD_STORAGE_BUCKET"
+        ]
+      }
+    }
   }
 }

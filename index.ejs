@@ -37,13 +37,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.0.2/plugins/CSSPlugin.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="/module"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=places&language=zh-TW&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=places&language=zh-TW&callback=initMap" async defer></script>
     
   </head>
   <body>
     <div id="poster" class="scrolling-wrapper-flexbox">
       <% for(const img of files ){ %>
-        <a class="card " href="javascript:void(0)" onclick="getTheaterLocation(event)"> <img  alt="<%= img.split('.')[0] %>" src="static/<%= img %>"></img>
+        <a class="card " href="javascript:void(0)" onclick="getTheaterLocation(event)"> <img  alt="<%= img.name.split('.')[0] %>" src="https://storage.googleapis.com/movie-1546758871417.appspot.com/<%= img.name %>"></img>
         </a>
       <%}%>
     </div>

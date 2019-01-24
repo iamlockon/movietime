@@ -23,8 +23,11 @@ module.exports = {
 		let areaID;
 		areaID = getAreaID(area);
 		//let now = new Date(2019,1,1,10,10);
+		//For Localtest
 		let now = new Date();
-		now.setHours(now.getHours()+8);
+		//For GCP
+		now.setHours(now.getHours() + 8);
+		
 		//console.log(now);
 		request('http://www.atmovies.com.tw/showtime/'+movie+'/'+areaID+'/', (err, res, body) => {
 			if(err)
@@ -35,9 +38,10 @@ module.exports = {
 				console.log("empty");
 				callback([]);
 			}else{
-				let result = $('#filmShowtimeBlock ul').map((index,obj)=>{
-					let cur = $('#filmShowtimeBlock ul')[index];
-					let next = $('#filmShowtimeBlock ul')[index+1];
+				const sel = $('#filmShowtimeBlock ul');
+				let result = sel.map((index,obj)=>{
+					let cur = sel[index];
+					let next = sel[index+1];
 					//console.log("A:",$(cur).find('.theaterTitle a').text()," B:",$(next).find('.theaterTitle a').text());
 					if($(cur).find('.theaterTitle a').text() == $(next).find('.theaterTitle a').text()){
 						repeated.push(index+1);
@@ -47,20 +51,24 @@ module.exports = {
 						type:[$(obj).find('.filmVersion').text()],
 						times:[$(obj).find('li').filter((i, ele)=>{
 							if($(ele).text().includes('：')){
+
 								let hhmm = $(ele).text().split('：');
 								//console.log(hhmm[0]);
 
 								// Beware of arithmetic expressions. hhmm[1]*1 but not hhmm[1] only.
 								// Limit the time range to +180 minutes.
-								if(hhmm[0] < 3)
+								if(now.getHours() > 20 && hhmm[0] < 3){
 									hhmm[0] = hhmm[0]*1 + 24; 
+								}
 								const showtime = hhmm[0]*60 + hhmm[1]*1;
 								const nowtime = now.getHours()*60 + now.getMinutes();
 								if(showtime > nowtime && nowtime + 180 > showtime){
+									//console.log("time:",$(ele).text());
 									return ele;
 								}
 							}
 						}).map((index,obj)=>{
+							//console.log($(obj).text());
 							return $(obj).text();
 						}).get()],
 

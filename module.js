@@ -53,13 +53,13 @@ function initMap() {
   function success(position) {
     pyrmont = new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
     getCity(pyrmont, (res)=>{
-      city = res;
+      if(res !== undefined)city = res;
     });
-    console.log("lat:",position.coords.latitude, "lng:", position.coords.longitude);
+    //console.log("lat:",position.coords.latitude, "lng:", position.coords.longitude);
     //console.log("pyrmont:",pyrmont);
     map = new google.maps.Map(document.getElementById('map'), {
       zoom: 12
-    });
+    });7
     map.setCenter(pyrmont);
     const marker = new google.maps.Marker({
     map: map,
@@ -72,17 +72,21 @@ function initMap() {
   function error(err) {
     console.warn('ERROR(' + err.code + '): ' + err.message);
     if(err.code === 1)
-      alert("取得位置失敗，請開啟定位或GPS，並使用高精確度模式。");
+      alert("取得位置失敗，請開啟定位，並使用高精確度模式。");
     else if(err.code === 2)
       alert("取得位置失敗，裝置回傳之位置資訊錯誤，請稍後再試。");
     else
-      alert("取得位置逾時，請稍後再試。");
+      alert("取得位置逾時，請確認定位是否已開啟，並請稍後再試。");
   };
 
 
 }
 
 function getTheaterLocation(e) {
+  if(city === undefined){
+    alert("尚未取得位置資訊，請稍候...");
+    return;
+  }
   removeMarker();
   TweenLite.to(window, 0.7,{scrollTo:"#map"}); 
   //console.log("e=",e);
@@ -107,6 +111,7 @@ function getTheaterLocation(e) {
     if(myJson.length === 0){
       //no showtime
       alert("很抱歉，您所在縣市電影院3小時內無相關場次資料。");
+      return;
     }
 
     //process
@@ -120,7 +125,11 @@ function getTheaterLocation(e) {
       }
       return false;
     });
-
+    if(myJson.length === 0){
+      //no showtime
+      alert("很抱歉，您所在縣市電影院3小時內無相關場次資料。");
+      return;
+    }
 
     //get LatLng of theaters with axios
     // request url like: /theaterinfo/a02 
