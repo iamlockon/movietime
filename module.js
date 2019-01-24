@@ -87,6 +87,9 @@ function getTheaterLocation(e) {
     alert("尚未取得位置資訊，請稍候...");
     return;
   }
+  if(city === '新北'){
+    city = '台北';
+  }
   removeMarker();
   TweenLite.to(window, 0.7,{scrollTo:"#map"}); 
   //console.log("e=",e);
@@ -162,7 +165,7 @@ function getCity(place, citycallback){
     if(status === google.maps.GeocoderStatus.OK){
       if(results){
         //console.log(results[0]["address_components"][2].short_name);
-        citycallback(results[0]["address_components"][2].short_name.slice(0,2));
+        citycallback(results[0]["formatted_address"].slice(5,7));
       }
     }
     else{
