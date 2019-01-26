@@ -3,7 +3,7 @@ Get Theater Info. and store it in "theaterInfo.json".
 */
 
 const gmapc =require('@google/maps').createClient({
-	key: 'APIKEY'
+	key: 'AIzaSyCh5dQ-lYoIi8G61RMAeQDLUGfY8fSVv90'
 });
 
 const axios = require('axios');

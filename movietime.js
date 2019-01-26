@@ -6,9 +6,6 @@ const request = require('request');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
-const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb+srv://iamlockon:ntjh42005@cluster00-alnp6.mongodb.net/test?retryWrites=true';
-const client = new MongoClient(uri, {useNewUrlParser: true});
 
 // getClosestMovieTime(process.argv[2], process.argv[3],(result)=>{
 // 	console.log(result);
@@ -18,20 +15,17 @@ const client = new MongoClient(uri, {useNewUrlParser: true});
 module.exports = {
 
 
-	getClosestMovieTime : async function getClosestMovieTime(movie, area, callback){
+	getClosestMovieTime : async function getClosestMovieTime(movie, area, db){
 		/**
 		*	movie:filmID
 		*	area: "XX" in zh-TW
 		*/
 		let areaID;
 		areaID = getAreaID(area);
-		//let now = new Date(2019,1,1,10,10);
-				
 		//See if db has data.
-		client.connect(async (err) =>{
-			if(err){
-				console.log("Error connecting db...:",err);
-			}
+		let data;
+		try{	
+			
 			/*
 		    *in db 'showtime', there is one collection of movies,
 			*in which there are areas documents, in which there are showtime data for all theaters in that area.
@@ -49,22 +43,22 @@ module.exports = {
 				{ "a02":[]},
 			 }
 			*/
-			let collection = client.db("showtime").collection("movies");
-			//if db does not have data, request and cache into db first.
-			let res = collection.findOne({name: movie});
+			let collection = db.collection('movies');
+			let res = await collection.findOne({name: movie});
+			//console.log("res:",res);
+			//if db does not have data or data is not updated, request and cache into db first.
+			//TODO: ADD DATA TIMESTAMP
 			if(!res || !res.showtime){
 				let result = await getShowtime(movie, areaID);
-				let val;
 				if(result === 'E'){
-					val = [];
-				}else{
-					//TODO:get all showtime of the day for the movie/areaID
-					
+					result = [];
 				}
+				let setval = {};
+				setval["showtime."+areaID] = result;
 				try{
-					collection.updateOne(
+					await collection.updateOne(
 						{ "name" : movie },
-						{ $set: { showtime.areaID : val}},
+						{ $set: setval },
 						{
 							upsert: true
 						}
@@ -74,14 +68,17 @@ module.exports = {
 				}
 			}
 			//get all data of the area for the movie from db.
-			let data = res.showtime.areaID;
-			//TODO:filter and return
-
-
-
-			client.close();
-		});
-		//console.log(now);
+			data = await collection.findOne({name: movie}, {areaID : true});
+			//console.log("data: ",data);
+			if(data.showtime[areaID].length === 0){
+				return [];
+			}else{
+				//console.log(data.showtime.areaID);
+				return processShowtime(data.showtime[areaID]);
+			}	
+		} catch (err) {
+			console.log("Error...:",err);
+		}
 		
 	}
 };
@@ -97,8 +94,37 @@ function getShowtime(movie,areaID) {
 				//console.log("empty");
 				resolve('E');
 			}else{
+				let repeated = [];
 				const sel = $('#filmShowtimeBlock ul');
-				resolve(sel);
+				let result = sel.map((index,obj)=>{
+					let cur = sel[index];
+					let next = sel[index+1];
+					if($(cur).find('.theaterTitle a').text() == $(next).find('.theaterTitle a').text()){
+						repeated.push(index+1);
+					}
+					return {
+						theater:$(obj).find('.theaterTitle a').text(),
+						type:[$(obj).find('.filmVersion').text()],
+						times:[$(obj).find('li').filter((i, ele)=>{
+							if($(ele).text().includes('：')){
+								return ele;
+							}
+						}).map((index,obj)=>{
+							//console.log($(obj).text());
+							return $(obj).text();
+						}).get()],
+		    		}
+					}).get();
+				//merge identical theater results.
+				//console.log("repeated:",repeated);
+				let head = repeated[0]-1;
+				for(let i = 0; i < repeated.length; i++){
+					result[head].type = result[head].type.concat(result[repeated[i]].type);
+					result[head].times = result[head].times.concat(result[repeated[i]].times);
+					result[repeated[i]] = {};
+					head = (repeated[i]+1 === repeated[i+1]) ? head : repeated[i+1]-1;
+				}
+				resolve(result);
 			}
 		});
 	});
@@ -106,58 +132,46 @@ function getShowtime(movie,areaID) {
 
 
 
-function processShowtime(sel) {
-	//For Localtest
-	let now = new Date();
-	//For GCP
-	now.setHours(now.getHours() + 8);
-	let repeated = [];
-	let result = sel.map((index,obj)=>{
-		let cur = sel[index];
-		let next = sel[index+1];
-		//console.log("A:",$(cur).find('.theaterTitle a').text()," B:",$(next).find('.theaterTitle a').text());
-		if($(cur).find('.theaterTitle a').text() == $(next).find('.theaterTitle a').text()){
-			repeated.push(index+1);
-		}
-		return {
-			theater:$(obj).find('.theaterTitle a').text(),
-			type:[$(obj).find('.filmVersion').text()],
-			times:[$(obj).find('li').filter((i, ele)=>{
-				if($(ele).text().includes('：')){
-
-					let hhmm = $(ele).text().split('：');
-					//console.log(hhmm[0]);
-
-					// Beware of arithmetic expressions. hhmm[1]*1 but not hhmm[1] only.
-					// Limit the time range to +180 minutes.
-					if(now.getHours() > 20 && hhmm[0] < 3){
-						hhmm[0] = hhmm[0]*1 + 24; 
-					}
-					const showtime = hhmm[0]*60 + hhmm[1]*1;
-					const nowtime = now.getHours()*60 + now.getMinutes();
-					if(showtime > nowtime && nowtime + 180 > showtime){
-						//console.log("time:",$(ele).text());
-						return ele;
-					}
+function processShowtime(data) {
+	/** data:[{theater:"A theater", type:[""],times:["10:00","13:00","15:00"]},
+	*	{theater:"B theater", type:["A","B"],times:[["10:00","13:00","15:00"],["14:30"]}
+	*	]
+	*/
+	//console.log("data:",data);
+	return data.map((theater)=>{
+		//console.log("theater: ", theater);
+		if(Object.entries(theater).length === 0 && theater.constructor === Object)return theater;
+		theater.times = theater.times.map((time_arr)=>{
+			//for each time array, return the new filtered one.
+			return time_arr.filter((time)=>{
+				//filter the showtime
+				let hhmm = time.split('：');
+				//console.log(hhmm[0]);
+				
+				//For Localtest
+				let now = new Date();
+				//For GCP
+				now.setHours(now.getHours() + 8);
+				// Beware of arithmetic expressions. hhmm[1]*1 but not hhmm[1] only.
+				// Limit the time range to +180 minutes.
+				if(now.getHours() > 20 && hhmm[0] < 3){
+					hhmm[0] = hhmm[0]*1 + 24; 
 				}
-			}).map((index,obj)=>{
-				//console.log($(obj).text());
-				return $(obj).text();
-			}).get()],
 
-		}
-		}).get();
-	//merge identical theater results.
-	//console.log("repeated:",repeated);
-	let head = repeated[0]-1;
-	for(let i = 0; i < repeated.length; i++){
-		result[head].type = result[head].type.concat(result[repeated[i]].type);
-		result[head].times = result[head].times.concat(result[repeated[i]].times);
-		result[repeated[i]] = {};
-		head = (repeated[i]+1 === repeated[i+1]) ? head : repeated[i+1]-1;
-	}
-	return result;
+				
+
+				const showtime = hhmm[0]*60 + hhmm[1]*1;
+				const nowtime = now.getHours()*60 + now.getMinutes();
+				if(showtime > nowtime && nowtime + 180 > showtime){
+					//console.log("time:",$(ele).text());
+					return time;
+				}
+			});
+		});
+		return theater;
+	});
 }
+
 
 function getAreaID(area){
 	/*

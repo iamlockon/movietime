@@ -2,3 +2,4 @@ node_modules/
 theaterinfo/
 cron.yaml
 gskey.json
+getTheaterInfo.js

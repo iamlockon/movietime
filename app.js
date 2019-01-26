@@ -1,4 +1,13 @@
 //require('@google-cloud/debug-agent').start();
+
+//***************** WARNING!! *********************
+//Before deploy, confirm the 'now' variable in processShowtime in movietime.js is correct.
+//Before push to git, confirm API KEY and MongoClient credentials are not pushed.
+
+//When testing on localhost, the cloud storage part will require the environment variable,
+//So be sure to run the following command before testing.
+//export GOOGLE_APPLICATION_CREDENTIALS="/home/jay/movietime/gskey.json"
+
 const express = require('express');
 const app = express();
 const port = 3000;
@@ -15,6 +24,23 @@ const bucketName = 'movie-1546758871417.appspot.com';
 app.set('views', '.');
 app.set('view engine', 'ejs');
 
+const PORT = process.env.PORT || 8080;
+
+const assert = require('assert');
+const MongoClient = require('mongodb').MongoClient;
+const uri = 'mongodb://ACC@PASS@cluster00-shard-00-00-alnp6.mongodb.net:27017,cluster00-shard-00-01-alnp6.mongodb.net:27017,cluster00-shard-00-02-alnp6.mongodb.net:27017/test?ssl=true&replicaSet=Cluster00-shard-0&authSource=admin&retryWrites=true';
+let db;
+
+MongoClient.connect(uri, { useNewUrlParser: true } , function(err, client) {
+  if(err)console.log("Failed to connect to MongoDB: ", err);
+  assert.equal(null, err);
+  console.log("Connected successfully to server");
+  db = client.db('showtime');
+  app.listen(PORT, () => {
+  	console.log(`Server listening on port ${PORT}...`);
+  });
+});
+
 app.get('/', async (req, res)=>{
 	const [files] = await storage.bucket(bucketName).getFiles();
 	res.render('index',{files:files});
@@ -27,6 +53,7 @@ app.get('/module', (req, res)=>{
 app.get('/getPoster',(req, res)=>{
 	if(req.get('X-Appengine-Cron')){
 		gp.getFilm();
+		gp.deleteDoc(db);
 		res.send('hello');
 	}
 })
@@ -44,18 +71,15 @@ app.get('/theaterinfo', (req,res)=>{
 	res.send(data);
 })
 
-app.get('/nearestshowtime', (req, res)=> {
+app.get('/nearestshowtime', async (req, res)=> {
 	let querycontents = {};
 	for(const key in req.query){
 		querycontents[key] = req.query[key];
 	}
-	mt.getClosestMovieTime(querycontents['movie'],querycontents['area'],(result)=>{
-		res.set('Access-Control-Allow-Origin','*');
-		res.send(result);
-	});
+	const result = await mt.getClosestMovieTime(querycontents['movie'],querycontents['area'], db);
+	//console.log("in app.js", result);
+	res.set('Access-Control-Allow-Origin','*');
+	res.send(result);
 
-});
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}...`);
+
 });

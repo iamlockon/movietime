@@ -1,5 +1,6 @@
 /*
 Get latest posters.
+2019-01-26: Add delectDoc to delete all movies' documents.
 */
 
 const cheerio = require('cheerio');
@@ -18,6 +19,11 @@ First off, we get filmID to compose the URL....
 let result;
 
 module.exports = {
+
+	deleteDoc : async function deleteDoc(db){
+		let collection = db.collection('movies');
+		await collection.deleteMany({});
+	},
 
 	getFilm : function getFilm(){
 		axios({
