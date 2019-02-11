@@ -37,8 +37,8 @@ module.exports = {
 			*}
 			*areas documents look kind of like:
 			*{
-				{ "a01":[{theater:"A theater", type:[""],times:["10:00","13:00","15:00"]},
-						{theater:"B theater", type:["",""],times:[["10:00","13:00","15:00"],["14:30"]}
+				{ "a01":[{theater:"A theater", theaterID:"xxxxxx", type:[""],times:["10:00","13:00","15:00"]},
+						{theater:"B theater", theaterID:"xxxxxx", type:["",""],times:[["10:00","13:00","15:00"],["14:30"]}
 						],
 				{ "a02":[]},
 			 }
@@ -47,7 +47,6 @@ module.exports = {
 			let res = await collection.findOne({name: movie});
 			//console.log("res:",res);
 			//if db does not have data or data is not updated, request and cache into db first.
-			//TODO: ADD DATA TIMESTAMP
 			if(!res || !res.showtime){
 				let result = await getShowtime(movie, areaID);
 				if(result === 'E'){
@@ -99,11 +98,12 @@ function getShowtime(movie,areaID) {
 				let result = sel.map((index,obj)=>{
 					let cur = sel[index];
 					let next = sel[index+1];
-					if($(cur).find('.theaterTitle a').text() == $(next).find('.theaterTitle a').text()){
+					if($(cur).find('.theaterTitle a').attr('href') === $(next).find('.theaterTitle a').attr('href')){
 						repeated.push(index+1);
 					}
 					return {
 						theater:$(obj).find('.theaterTitle a').text(),
+						theaterID: $(obj).find('.theaterTitle a').attr('href').split('/')[2],
 						type:[$(obj).find('.filmVersion').text()],
 						times:[$(obj).find('li').filter((i, ele)=>{
 							if($(ele).text().includes('：')){
@@ -133,7 +133,7 @@ function getShowtime(movie,areaID) {
 
 
 function processShowtime(data) {
-	/** data:[{theater:"A theater", type:[""],times:["10:00","13:00","15:00"]},
+	/** data:[{theater:"A theater",theaterID:"xxxxxx" type:[""],times:["10:00","13:00","15:00"]},
 	*	{theater:"B theater", type:["A","B"],times:[["10:00","13:00","15:00"],["14:30"]}
 	*	]
 	*/

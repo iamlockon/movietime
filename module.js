@@ -123,7 +123,6 @@ function getTheaterLocation(e) {
       if(ele.times === undefined)return false;
       for(let i = 0; i< ele.times.length;i++){
         //if(ele.times[i] === undefined)return false;
-        if(ele.times[i].length === 0)return false;
         if(ele.times[i].length > 0)return true;
       }
       return false;
@@ -140,9 +139,18 @@ function getTheaterLocation(e) {
     axios.get(`/theaterinfo?area=${areas[city]}`)
       .then((theaterdata)=>{
         //console.log("theaterdata= ", theaterdata);
+        let count = 0;
         for (const showtimedata of myJson){ 
           //showtimedata : {theater: "XX", type:Array, times:Array}, get LatLng from the file
-          createMarker(theaterdata.data[showtimedata.theater], showtimedata);
+          //20190211 fix showtime theater's name issue: 
+          //add unique theaterID in showtimedata object.
+          let th = showtimedata.theaterID;
+          if(theaterdata.data[th] === undefined){
+            console.log("theaterdata is undefined...:",showtimedata);
+            throw "error";
+          }
+          console.log(count++);
+          createMarker(theaterdata.data[showtimedata.theaterID], showtimedata);
         }
       })
       .catch((err)=>console.log("Get theaterinfo failed... :",err));
@@ -175,11 +183,8 @@ function getCity(place, citycallback){
 }
 
 
-function createMarker(location, showtimedata) {
+function createMarker(latLng, showtimedata) {
   
-  const latLng = location[1];
-  const addr = location[0];
-
   let marker = new google.maps.Marker({
     map: map,
     position: latLng

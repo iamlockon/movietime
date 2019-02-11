@@ -15,7 +15,6 @@ const path = require('path');
 const mt =  require('./movietime.js');
 const gp = require('./getPoster.js');
 const fs = require('fs');
-const {exec} = require('child_process');
 
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
@@ -28,7 +27,7 @@ const PORT = process.env.PORT || 8080;
 
 const assert = require('assert');
 const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb://ACC@PASS@cluster00-shard-00-00-alnp6.mongodb.net:27017,cluster00-shard-00-01-alnp6.mongodb.net:27017,cluster00-shard-00-02-alnp6.mongodb.net:27017/test?ssl=true&replicaSet=Cluster00-shard-0&authSource=admin&retryWrites=true';
+const uri = 'mongodb://CREDENTIAL@cluster00-shard-00-00-alnp6.mongodb.net:27017,cluster00-shard-00-01-alnp6.mongodb.net:27017,cluster00-shard-00-02-alnp6.mongodb.net:27017/test?ssl=true&replicaSet=Cluster00-shard-0&authSource=admin&retryWrites=true';
 let db;
 
 MongoClient.connect(uri, { useNewUrlParser: true } , function(err, client) {

@@ -1,5 +1,5 @@
 /*
-Get Theater Info. and store it in "theaterInfo.json".
+Get Theater Info. and store it in "theaterinfo" folder.
 */
 
 const gmapc =require('@google/maps').createClient({
@@ -42,9 +42,11 @@ async function getAddress(){
 			.then((res)=>{
 				let $ = cheerio.load(res.data);
 				const result = {};
-				$('#theaterList li:not(.type0)').map((index,obj)=>{
-					if($(obj).find('ul li:nth-child(3)').text()==="")return undefined;
-					result[$(obj).find('a').first().text().trim()] = $(obj).find('ul li:nth-child(3)').text().trim();
+				$('#theaterList').children().map((index,obj)=>{
+					if($(obj).find('a[onmouseover]').attr('href') !== undefined){
+						//console.log($(obj).find('a[onmouseover]').attr('href'));
+						result[$(obj).find('a[onmouseover]').attr('href').split('/')[2]] = $(obj).find('ul li:nth-child(3)').text().trim();
+					}
 				});
 				//console.log(result);
 				const data = JSON.stringify(result, null, 2);
@@ -78,15 +80,9 @@ async function getLocation(){
 		//console.log("before getlatLng:", data);
 		
 		getlatLng(data)
-		 .then((res)=>{
-		 	//console.log("loc=:",res);
-		 	//combine data and loc
-		 	let count = 0;
-		 	for(const key in data){
-		 		data[key] = [data[key], res[count]];
-		 		count++;
-		 	}
-		 	//save file
+		 .then(()=>{
+		 	//console.log("data:",data);
+		 	// save file
 		 	const result = JSON.stringify(data, null, 2);
 		 	try{
 		 		fs.writeFileSync(`theaterinfo/${area}_info.json`, result);
@@ -95,11 +91,9 @@ async function getLocation(){
 		 	}
 		 })
 		 .catch((err)=>console.log(err));
-		
-		
-
 	}
 }
+//
 function getlatLng(data){
 	let arr = [];
 	for(const key in data){
@@ -117,7 +111,8 @@ function getlatLng(data){
 					//console.log("latLng:", loc);
 					//const latLng = res.json.results.geometry.location;
 					//console.log("res:", res);
-					resolve(loc);
+					data[key] = loc;
+					resolve();
 				}else{
 					console.log("Geocoding failed at: ",err);
 				}
