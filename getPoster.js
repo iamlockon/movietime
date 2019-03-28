@@ -7,7 +7,7 @@ const cheerio = require('cheerio');
 const axios = require('axios');
 const fs = require('fs');
 
-const {Storage} = require('@google-cloud/storage');
+const { Storage } = require('@google-cloud/storage');
 const projectId = 'movie-1546758871417';
 const storage = new Storage();
 
@@ -20,35 +20,34 @@ let result;
 
 module.exports = {
 
-	deleteDoc : async function deleteDoc(db){
+	deleteDoc: async function deleteDoc(db) {
 		let collection = db.collection('movies');
 		await collection.deleteMany({});
 	},
 
-	getFilm : function getFilm(){
+	getFilm: function getFilm() {
 		axios({
-			method:'get',
-			url:'http://ww2.atmovies.com.tw/james-parallelism/newfilm.html',
-			})
-			.then((res)=>{
+			method: 'get',
+			url: 'http://www.atmovies.com.tw/movie/now/',
+		})
+			.then((res) => {
 				let $ = cheerio.load(res.data);
-				result = $('.item.thumb img').map((index, obj)=>{
-					//console.log("obj",$(obj));
-					if($(obj).attr('alt') === "開眼E週報")return undefined;
+				result = $('.filmListAll2 li > a').map((index, obj) => {
+					//console.log("obj",$(obj).attr('href'));
 					return {
-						filmID:$(obj).attr('src').split('/')[4],
-						filmName:$(obj).attr('alt')
+						filmID: $(obj).attr('href').split('/')[2],
+						filmName: $(obj).text(),
 					}
 				}).get();
 				return removeOld(bucketName);
 			})
-			.then(()=>{
+			.then(() => {
 				getPoster(result);
 			})
-			.catch((err)=>{
-				console.log("Failed to get filmID...: ",err);
+			.catch((err) => {
+				console.log("Failed to get filmID...: ", err);
 			})
-		}
+	}
 }
 
 /*
@@ -58,73 +57,92 @@ The poster URL looks something like
 and the selector of the element is $('.shadow1 a'), the poster URL is
 in "href" attribute. 
 */
-function getPoster(result){
 
-	for(let i = 0; i<result.length; i++){
+function sleep (time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+function getPoster(result) {
+
+	for (let i = 0; i < result.length; i++) {
+		try {
+			(async()=>{
+				await sleep(80);
+			})();
+		}catch(e){
+			console.log("Error in sleep:",e);
+		}
 		axios({
-			method:'get',
-			url:`http://app2.atmovies.com.tw/poster/${result[i].filmID}/`,
-			})
-			.then((res)=>{
-				let $ = cheerio.load(res.data);
-				let a = $('.shadow1 a');
-				let imgurl = $(a[0]).attr('href');
-				//console.log($(a[0]).attr('href'));
-				//Get images
-				const filename = `${result[i].filmID}.jpg`;
-				const mybucket = storage.bucket(bucketName);
-				const file = mybucket.file(filename);
-				//let file = fs.createWriteStream(filename);
-				axios.get(imgurl, {
-					headers:{
-						'Referer': 'http://app2.atmovies.com.tw/poster/',
-						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+			method: 'get',
+			url: `http://app2.atmovies.com.tw/poster/${result[i].filmID}/`,
+		})
+		.then((res) => {
+			let $ = cheerio.load(res.data);
+			let a = $('.shadow1 a');
+			let imgurl = $(a[0]).attr('href');
+			//console.log($(a[0]).attr('href'));
+			//Get images
+			const filename = `${result[i].filmID}.jpg`;
+			const mybucket = storage.bucket(bucketName);
+			
+			//let file = fs.createWriteStream(filename);
+			const options = {
+				headers: {
+					'Accept': 'image/jpeg, */*',
+					'Referer': `http://app2.atmovies.com.tw/poster/${result[i].filmID}/`,
+					'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+
+				},
+				responseType: 'stream'
+
+			};
 	
-					},
-					responseType:'stream'
-
-								})
-					.then((res)=>{
-						res.data.pipe(file.createWriteStream({gzip:true}))
-								.on('error', (err)=>console.log("Error writing to GCP:", err))
-								.on('finish', ()=>{
-									//file upload complete.
-								})
+			axios.get(imgurl, options)
+			.then((res) => {
+				const file = mybucket.file(filename);
+				res.data.pipe(file.createWriteStream({ gzip: true }))
+					.on('error', (err) => console.log("Error writing to GCP:", err))
+					.on('finish', () => {
+						console.log(`Get ${filename}`);
 					})
-					.catch((err)=>{
-						console.log(`Error getting ${imgurl}...: `, err);
-					});
+			})
+			.catch((err) => {	
+					console.log(`404 Error getting ${imgurl}... `);
+					return;
+				
+			});
 
-			})
-			.catch((err)=>{
-				console.log("Failed to get posters...: ",err);
-			})
-		
+		})
+		.catch((err) => {	
+				console.log(`404 Error getting poster page`);
+				return;
+		})
+
 	}
 
 }
 
 
 
-function removeOld(bucketName){
+function removeOld(bucketName) {
 	/***
 	utility function to remove all files in the bucket.
 	***/
-	return new Promise(async (resolve)=>{
+	return new Promise(async (resolve) => {
 		const [files] = await storage.bucket(bucketName).getFiles();
-		for (const file of files){
-			try{
+		for (const file of files) {
+			try {
 				await storage
-				  .bucket(bucketName)
-				  .file(file.name)
-				  .delete();
-				
-			}catch(err){
-				console.log(`Error when deleting gs://${bucketName}/${file.name}...`,err);
+					.bucket(bucketName)
+					.file(file.name)
+					.delete();
+
+			} catch (err) {
+				console.log(`Error when deleting gs://${bucketName}/${file.name}...`, err);
 			}
-			console.log(`gs://${bucketName}/${file.name} deleted.`);	
+			console.log(`gs://${bucketName}/${file.name} deleted.`);
 		}
 		resolve();
 	})
-		
+
 }

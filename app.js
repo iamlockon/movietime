@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 8080;
 
 const assert = require('assert');
 const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb://CREDENTIAL@cluster00-shard-00-00-alnp6.mongodb.net:27017,cluster00-shard-00-01-alnp6.mongodb.net:27017,cluster00-shard-00-02-alnp6.mongodb.net:27017/test?ssl=true&replicaSet=Cluster00-shard-0&authSource=admin&retryWrites=true';
+const uri = 'mongodb://___@cluster00-shard-00-00-alnp6.mongodb.net:27017,cluster00-shard-00-01-alnp6.mongodb.net:27017,cluster00-shard-00-02-alnp6.mongodb.net:27017/test?ssl=true&replicaSet=Cluster00-shard-0&authSource=admin&retryWrites=true';
 let db;
 
 MongoClient.connect(uri, { useNewUrlParser: true } , function(err, client) {
@@ -66,7 +66,7 @@ app.get('/theaterinfo', (req,res)=>{
 		console.log(`Get raw data from theaterinfo/${areaID}_info.json failed.... :`, err);
 	}
 	//transform the raw data to object.
-	let data = JSON.parse(rawdata);
+	let data = JSON.parse(rawdata);9
 	res.send(data);
 })
 

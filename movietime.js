@@ -68,7 +68,7 @@ module.exports = {
 			}
 			//get all data of the area for the movie from db.
 			data = await collection.findOne({name: movie}, {areaID : true});
-			//console.log("data: ",data);
+			console.log("data: ",data);
 			if(data.showtime[areaID].length === 0){
 				return [];
 			}else{
